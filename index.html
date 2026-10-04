@@ -45,6 +45,7 @@
         }
     </style>
 </head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <body>
 
@@ -66,16 +67,45 @@
 
 async function loadPrices() {
 
-   const response = await fetch("/prices/Skellies");
+    const skelliesResponse = await fetch("/prices/Skellies");
+    const spawnersResponse = await fetch("/prices/Skeleton%20Spawners");
 
-    const prices = await response.json();
+    const skellies = await skelliesResponse.json();
+    const spawners = await spawnersResponse.json();
 
-    const labels = prices.map(function(item) {
-        return new Date(item.timestamp).toLocaleTimeString();
+    const labels = [
+        ...new Set([
+            ...skellies.map(item => item.timestamp),
+            ...spawners.map(item => item.timestamp)
+        ])
+    ].sort();
+
+    const skelliesMap = {};
+    skellies.forEach(item => {
+        skelliesMap[item.timestamp] = item.price;
     });
 
-    const values = prices.map(function(item) {
-        return item.price;
+    const spawnersMap = {};
+    spawners.forEach(item => {
+        spawnersMap[item.timestamp] = item.price;
+    });
+
+    const formattedLabels = labels.map(function(timestamp) {
+        const date = new Date(item.timestamp);
+
+return String(date.getDate()).padStart(2, "0") + "/" +
+       String(date.getMonth() + 1).padStart(2, "0") + "/" +
+       date.getFullYear() + " " +
+       String(date.getHours()).padStart(2, "0") + ":" +
+       String(date.getMinutes()).padStart(2, "0");
+    });
+
+    const skelliesValues = labels.map(function(timestamp) {
+        return skelliesMap[timestamp] ?? null;
+    });
+
+    const spawnersValues = labels.map(function(timestamp) {
+        return spawnersMap[timestamp] ?? null;
     });
 
     const ctx = document.getElementById("priceChart");
@@ -86,15 +116,27 @@ async function loadPrices() {
 
         data: {
 
-            labels: labels,
+            labels: formattedLabels,
 
-            datasets: [{
-                label: "Skellies Price",
-                data: values,
-                borderWidth: 3,
-                tension: 0.3,
-                pointRadius: 5
-            }]
+            datasets: [
+
+                {
+                    label: "Skellies Price",
+                    data: skelliesValues,
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 5
+                },
+
+                {
+                    label: "Skeleton Spawners Price",
+                    data: spawnersValues,
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 5
+                }
+
+            ]
 
         },
 
@@ -104,36 +146,36 @@ async function loadPrices() {
 
             maintainAspectRatio: false,
 
-           plugins: {
+            plugins: {
 
-    legend: {
-        display: true
-    },
+                legend: {
+                    display: true
+                },
 
-    tooltip: {
-        callbacks: {
-            label: function(context) {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
 
-                let value = context.parsed.y;
+                            let value = context.parsed.y;
 
-                if (value >= 1000000000) {
-                    return "Price: " + (value / 1000000000) + "b";
+                            if (value >= 1000000000) {
+                                return "Price: " + (value / 1000000000) + "b";
+                            }
+
+                            if (value >= 1000000) {
+                                return "Price: " + (value / 1000000) + "m";
+                            }
+
+                            if (value >= 1000) {
+                                return "Price: " + (value / 1000) + "k";
+                            }
+
+                            return "Price: " + value;
+                        }
+                    }
                 }
 
-                if (value >= 1000000) {
-                    return "Price: " + (value / 1000000) + "m";
-                }
-
-                if (value >= 1000) {
-                    return "Price: " + (value / 1000) + "k";
-                }
-
-                return "Price: " + value;
-            }
-        }
-    }
-
-},
+            },
 
             scales: {
 
@@ -179,9 +221,6 @@ async function loadPrices() {
     });
 
 }
-
-
-loadPrices();
 
 
 setInterval(function() {
