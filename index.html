@@ -70,10 +70,13 @@ async function loadPrices() {
 
     const prices = await response.json();
 
-    const labels = prices.map(function(item) {
-        return new Date(item.timestamp).toLocaleTimeString();
-    });
+   const labels = prices.map(function(item) {
+    const date = new Date(item.timestamp);
 
+    return String(date.getDate()).padStart(2, "0") + "/" +
+           String(date.getMonth() + 1).padStart(2, "0") + "/" +
+           date.getFullYear();
+});
     const values = prices.map(function(item) {
         return item.price;
     });
