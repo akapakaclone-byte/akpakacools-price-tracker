@@ -66,9 +66,7 @@
 
 async function loadPrices() {
 
-    const response = await fetch(
-        "http://127.0.0.1:5000/prices/Skellies"
-    );
+   const response = await fetch("/prices/Skellies");
 
     const prices = await response.json();
 
