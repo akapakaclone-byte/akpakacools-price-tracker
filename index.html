@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Akapakacools Price Tracker</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background: #0b0b0f;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 50px auto;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .chart-box {
+            background: #141419;
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.4);
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 500px !important;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Skellies</h1>
+
+    <div class="subtitle">
+        Price history
+    </div>
+
+    <div class="chart-box">
+        <canvas id="priceChart"></canvas>
+    </div>
+
+</div>
+
+<script>
+
+async function loadPrices() {
+
+    const response = await fetch(
+        "http://127.0.0.1:5000/prices/Skellies"
+    );
+
+    const prices = await response.json();
+
+    const labels = prices.map(function(item) {
+        return new Date(item.timestamp).toLocaleTimeString();
+    });
+
+    const values = prices.map(function(item) {
+        return item.price;
+    });
+
+    const ctx = document.getElementById("priceChart");
+
+    new Chart(ctx, {
+
+        type: "line",
+
+        data: {
+
+            labels: labels,
+
+            datasets: [{
+                label: "Skellies Price",
+                data: values,
+                borderWidth: 3,
+                tension: 0.3,
+                pointRadius: 5
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+           plugins: {
+
+    legend: {
+        display: true
+    },
+
+    tooltip: {
+        callbacks: {
+            label: function(context) {
+
+                let value = context.parsed.y;
+
+                if (value >= 1000000000) {
+                    return "Price: " + (value / 1000000000) + "b";
+                }
+
+                if (value >= 1000000) {
+                    return "Price: " + (value / 1000000) + "m";
+                }
+
+                if (value >= 1000) {
+                    return "Price: " + (value / 1000) + "k";
+                }
+
+                return "Price: " + value;
+            }
+        }
+    }
+
+},
+
+            scales: {
+
+                x: {
+
+                    ticks: {
+                        color: "#888"
+                    }
+
+                },
+
+                y: {
+
+                    ticks: {
+
+                        color: "#888",
+
+                        callback: function(value) {
+
+                            if (value >= 1000000000) {
+                                return (value / 1000000000) + "b";
+                            }
+
+                            if (value >= 1000000) {
+                                return (value / 1000000) + "m";
+                            }
+
+                            if (value >= 1000) {
+                                return (value / 1000) + "k";
+                            }
+
+                            return value;
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+
+loadPrices();
+
+
+setInterval(function() {
+
+    location.reload();
+
+}, 10000);
+
+</script>
+
+</body>
+</html>
